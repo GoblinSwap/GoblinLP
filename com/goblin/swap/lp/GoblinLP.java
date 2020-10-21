@@ -37,8 +37,8 @@ public class GoblinLP extends Ownable implements Contract {
     }
 
     public void addLiquidity(Address account, BigInteger lpAmount, BigInteger value, BigInteger tokenAmount) {
-        require(Msg.sender().equals(owner) || (allowedContracts.get(Msg.sender()) != null && allowedContracts.get(Msg.sender())),"only allow contract can call this method");
-        require(lpAmount.compareTo(BigInteger.ZERO) > 0 && value.compareTo(BigInteger.ZERO) > 0 && tokenAmount.compareTo(BigInteger.ZERO) > 0,"add amount must be >0");
+        require(Msg.sender().equals(owner) || (allowedContracts.get(Msg.sender()) != null && allowedContracts.get(Msg.sender())), "only allow contract can call this method");
+        require(lpAmount.compareTo(BigInteger.ZERO) > 0 && value.compareTo(BigInteger.ZERO) > 0 && tokenAmount.compareTo(BigInteger.ZERO) > 0, "add amount must be >0");
 
         if (lpTotalMap.get(account) != null) {
             lpTotalMap.put(account, lpTotalMap.get(account).add(lpAmount));
@@ -59,8 +59,8 @@ public class GoblinLP extends Ownable implements Contract {
     }
 
     public void lockLiquidity(Address account, BigInteger lpAmount) {
-        require(lpAmount.compareTo(BigInteger.ZERO) > 0,"lockLiquidity amount must be >0");
-        require(Msg.sender().equals(owner) || (allowedContracts.get(Msg.sender()) != null && allowedContracts.get(Msg.sender())),"only allow contract can call this method");
+        require(lpAmount.compareTo(BigInteger.ZERO) > 0, "lockLiquidity amount must be >0");
+        require(Msg.sender().equals(owner) || (allowedContracts.get(Msg.sender()) != null && allowedContracts.get(Msg.sender())), "only allow contract can call this method");
         BigInteger canUsed = getCanUsedLpAmount(account);
         require(canUsed.compareTo(lpAmount) >= 0, "lp is not enough");
         if (lpLockedMap.get(account) != null) {
@@ -72,8 +72,8 @@ public class GoblinLP extends Ownable implements Contract {
     }
 
     public void withdrawLiquidity(Address account, BigInteger lpAmount) {
-        require(lpAmount.compareTo(BigInteger.ZERO) > 0,"withdrawLiquidity amount must be >0");
-        require(Msg.sender().equals(owner) || (allowedContracts.get(Msg.sender()) != null && allowedContracts.get(Msg.sender())),"only allow contract can call this method");
+        require(lpAmount.compareTo(BigInteger.ZERO) > 0, "withdrawLiquidity amount must be >0");
+        require(Msg.sender().equals(owner) || (allowedContracts.get(Msg.sender()) != null && allowedContracts.get(Msg.sender())), "only allow contract can call this method");
         BigInteger lockLp = getLockedLpAmount(account);
         require(lockLp.compareTo(lpAmount) >= 0);
 
@@ -81,13 +81,23 @@ public class GoblinLP extends Ownable implements Contract {
     }
 
     public void removeLiquidity(Address account, BigInteger lpAmount, BigInteger value, BigInteger tokenAmount) {
-        require(lpAmount.compareTo(BigInteger.ZERO) > 0 && value.compareTo(BigInteger.ZERO) > 0 && tokenAmount.compareTo(BigInteger.ZERO) > 0,"remove amount must be >0");
-        require(Msg.sender().equals(owner) || (allowedContracts.get(Msg.sender()) != null && allowedContracts.get(Msg.sender())),"only allow contract can call this method");
+        require(lpAmount.compareTo(BigInteger.ZERO) > 0 && value.compareTo(BigInteger.ZERO) > 0 && tokenAmount.compareTo(BigInteger.ZERO) > 0, "remove amount must be >0");
+        require(Msg.sender().equals(owner) || (allowedContracts.get(Msg.sender()) != null && allowedContracts.get(Msg.sender())), "only allow contract can call this method");
         BigInteger canUsed = getCanUsedLpAmount(account);
         require(canUsed.compareTo(lpAmount) >= 0, "lp is not enough");
-        lpTotalMap.put(account, lpTotalMap.get(account).subtract(lpAmount));
-        valueMap.put(account, valueMap.get(account).subtract(value));
-        tokenMap.put(account, tokenMap.get(account).subtract(tokenAmount));
+        BigInteger l = lpTotalMap.get(account).subtract(lpAmount).compareTo(BigInteger.ZERO) > 0 ? lpTotalMap.get(account).subtract(lpAmount) : BigInteger.ZERO;
+        lpTotalMap.put(account, l);
+
+        if(l.compareTo(BigInteger.ZERO) == 0){
+            valueMap.put(account, BigInteger.ZERO);
+            tokenMap.put(account, BigInteger.ZERO);
+        }else{
+            BigInteger v = valueMap.get(account).subtract(value).compareTo(BigInteger.ZERO) > 0 ? valueMap.get(account).subtract(value) : BigInteger.ZERO;
+            valueMap.put(account, v);
+            BigInteger t = tokenMap.get(account).subtract(tokenAmount).compareTo(BigInteger.ZERO) > 0 ? tokenMap.get(account).subtract(tokenAmount) : BigInteger.ZERO;
+            tokenMap.put(account, t);
+        }
+
     }
 
 
